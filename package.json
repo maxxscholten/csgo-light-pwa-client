@@ -15,5 +15,6 @@
   "homepage": "",
   "dependencies": {
     "live-server": "^1.1.0"
-  }
+  },
+  "start": "live-server --port=80"
 }
