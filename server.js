@@ -1,8 +1,12 @@
-var request = require('request');
-var firebase = require('firebase');
+const request = require('request');
+const firebase = require('firebase');
 const webpush = require('web-push');
-var express = require('express');
+const express = require('express');
+const bodyParser = require('body-parser');
+const urlsafeBase64 = require('urlsafe-base64');
 var app = express();
+app.use(bodyParser.json()); // support json encoded bodies
+app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
 var config = {
     apiKey: "AIzaSyC0tCAZrwbLvTc9QU-9slLuixAb2nsGm78",
@@ -17,8 +21,7 @@ var devicesList = firebase.database().ref('devices');
 
 // VAPID keys should only be generated only once.
 const vapidKeys = webpush.generateVAPIDKeys();
-
-//console.log(vapidKeys)
+const decodedVapidPublicKey = vapidKeys.publicKey;
 
 //remove `{{  }}` when you are providing keys
 
@@ -30,16 +33,25 @@ webpush.setVapidDetails(
     vapidKeys.privateKey
 );
 
+var pushSubscription = {};
 
-// This is the same output of calling JSON.stringify on a PushSubscription
-// TODO the keys are to be obtained yourself and filled out
-const pushSubscription = {
-    endpoint: 'https://android.googleapis.com/gcm/send/d3Yv2xKfa94:APA91bHua6UyxjLgvbOr2tWlah6sumokMJn8rm08pNjMNwZeqP4JQenv_mPiUWiw2bmosc0psuCtNIafBZ_c_1ift-nNGOVQmfeJT7vzdxmXfmKg_3Y42vGN7yX35SwkNFIJDAwU03JX',
-    keys: {
-        auth: 'Ohgw1MyAxWRH7h-9NKwnbQ==',
-        p256dh: 'BFfQaIfz9IKbRN2Yw4gi6xrpVLiX4uJ3htrMpfQvQ2wyMCBdoeq97Gby7OZBOh4QI64244uGqCWoFJ-JWcQAdbQ='
-    }
-};
+app.set('port', (process.env.PORT || 5000));
+
+app.use(express.static(__dirname + '/public'));
+
+// views is directory for all template files
+app.set('views', __dirname + '/views');
+app.set('view engine', 'ejs');
+
+app.get('/', function(request, response) {
+  response.render('pages/index', {decodedVapidPublicKey: decodedVapidPublicKey});
+});
+
+app.post('/push', function(request, response) {
+  pushSubscription = request.body.subscription;
+  console.log(pushSubscription);
+  response.send('OK');
+});
 
 
 devicesList.on("value", function(data) {
@@ -67,32 +79,11 @@ devicesList.on("value", function(data) {
 });
 
 
-
 function sendNotification(deviceStatus, deviceName){
   deviceStatus == 1 ? deviceStatus = 'on' : 'off';
   var notificationMsg = deviceName + ' is ' + deviceStatus;
-  webpush.sendNotification(pushSubscription, notificationMsg)
-      .then(function(result) {
-          console.log(result)
-      }).catch(function(error) {
-          console.log('error', error)
-      })
+  webpush.sendNotification(pushSubscription, notificationMsg);
 }
-
-
-
-
-app.set('port', (process.env.PORT || 5000));
-
-app.use(express.static(__dirname + '/public'));
-
-// views is directory for all template files
-app.set('views', __dirname + '/views');
-app.set('view engine', 'ejs');
-
-app.get('/', function(request, response) {
-  response.render('pages/index');
-});
 
 app.listen(app.get('port'), function() {
   console.log('Node app is running on port', app.get('port'));

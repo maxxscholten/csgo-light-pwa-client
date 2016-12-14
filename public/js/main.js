@@ -6,14 +6,24 @@ if ('serviceWorker' in navigator) {
 
   navigator.serviceWorker.register('sw.js').then(function() {
     return navigator.serviceWorker.ready;
+  }).then((serviceWorkerRegistration) => {
+    serviceWorkerRegistration.pushManager.getSubscription()
+    .then((subscription) => {
+      console.log(subscription.toJSON());
+      $.post('/push', {
+        subscription: subscription.toJSON()
+      });
+
+    });
   }).then(function(reg) {
-    console.log('Service Worker is ready to go!', reg);
+    console.log('Service Worker is ready to go!');
     reg.pushManager.subscribe(
       {
-        userVisibleOnly: true
+        userVisibleOnly: true,
+        applicationServerKey: window.vapidPublicKey
       }
     ).then(function(sub) {
-      console.log(JSON.stringify(sub));
+      //console.log(JSON.stringify(sub));
     });
   }).catch(function(error) {
     console.log('Service Worker failed to boot', error);
