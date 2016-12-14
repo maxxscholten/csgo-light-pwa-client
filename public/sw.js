@@ -25,7 +25,7 @@ self.addEventListener('push', function(event) {
 self.addEventListener('notificationclick', function(event) {
   console.log('Notification click: tag', event.notification.tag);
   event.notification.close();
-  var url = 'http://www.csgolight.com';
+  var url = 'https://csgo-light-pwa-client.herokuapp.com/';
   event.waitUntil(
     clients.matchAll({
       type: 'window'
