@@ -4,28 +4,24 @@
 if ('serviceWorker' in navigator) {
   console.log('Service Worker is supported on this browser');
 
-  navigator.serviceWorker.register('sw.js').then(function() {
-    return navigator.serviceWorker.ready;
-  }).then((serviceWorkerRegistration) => {
-    serviceWorkerRegistration.pushManager.getSubscription()
-    .then((subscription) => {
-      console.log(subscription.toJSON());
-      $.post('/push', {
-        subscription: subscription.toJSON()
-      });
 
-    });
-  }).then(function(reg) {
-    console.log('Service Worker is ready to go!');
-    reg.pushManager.subscribe(
-      {
-        userVisibleOnly: true,
-        applicationServerKey: window.vapidPublicKey
-      }
-    ).then(function(sub) {
-      //console.log(JSON.stringify(sub));
-    });
-  }).catch(function(error) {
-    console.log('Service Worker failed to boot', error);
+  navigator.serviceWorker.register('sw.js').then(function(serviceWorkerRegistration) {
+    // Do we already have a push message subscription?
+    serviceWorkerRegistration.pushManager.getSubscription().then(function(subscription) {
+          // If a subscription was found, return it.
+          if (subscription) {
+            return subscription;
+          }
+
+          // Otherwise, subscribe the user (userVisibleOnly allows to specify
+          // that we don't plan to send notifications that don't have a
+          // visible effect for the user).
+          return serviceWorkerRegistration.pushManager.subscribe({
+            userVisibleOnly: true
+          });
+      }).then(function(subscription) {
+          console.log(serviceWorkerRegistration.pushManager.getSubscription());
+          $.post('/push', {subscription: subscription.toJSON()});
+      });
   });
 }
