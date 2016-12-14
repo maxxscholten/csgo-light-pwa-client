@@ -14,7 +14,7 @@
   },
   "homepage": "",
   "dependencies": {
-    "live-server": "^1.1.0"
-  },
-  "start": "live-server"
+    "ejs": "^2.5.5",
+    "express": "^4.14.0"
+  }
 }

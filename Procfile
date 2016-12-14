@@ -1,1 +1,1 @@
-web: live-server
+web: npm start
