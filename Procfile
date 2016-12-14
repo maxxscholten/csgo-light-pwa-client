@@ -1,1 +1,1 @@
-web: live-server --port=80
+web: live-server
