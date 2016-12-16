@@ -1,9 +1,12 @@
+'use strict';
+
 const request = require('request');
 const firebase = require('firebase');
 const webpush = require('web-push');
 const express = require('express');
 const bodyParser = require('body-parser');
 const urlsafeBase64 = require('urlsafe-base64');
+const base64 = require('hi-base64');
 var app = express();
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
@@ -21,7 +24,7 @@ var devicesList = firebase.database().ref('devices');
 
 // VAPID keys should only be generated only once.
 const vapidKeys = webpush.generateVAPIDKeys();
-const decodedVapidPublicKey = vapidKeys.publicKey;
+const vapidPublicKey = vapidKeys.publicKey;
 
 //remove `{{  }}` when you are providing keys
 
@@ -33,7 +36,7 @@ webpush.setVapidDetails(
     vapidKeys.privateKey
 );
 
-var pushSubscription = {};
+var pushSubscription = null;
 
 app.set('port', (process.env.PORT || 5000));
 
@@ -44,12 +47,11 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
 app.get('/', function(request, response) {
-  response.render('pages/index', {decodedVapidPublicKey: decodedVapidPublicKey});
+  response.render('pages/index', {vapidPublicKey: vapidPublicKey});
 });
 
 app.post('/push', function(request, response) {
   pushSubscription = request.body.subscription;
-  console.log(pushSubscription);
   response.send('OK');
 });
 
@@ -63,7 +65,6 @@ devicesList.on("value", function(data) {
         if (!devicesListData.hasOwnProperty(key)) continue;
 
         var obj = devicesListData[key];
-        console.log(obj.lightStatus);
         if (obj.lightStatus == 1) {
             deviceIsOn = true;
             deviceStatus = obj.lightStatus;
@@ -82,7 +83,23 @@ devicesList.on("value", function(data) {
 function sendNotification(deviceStatus, deviceName){
   deviceStatus == 1 ? deviceStatus = 'on' : 'off';
   var notificationMsg = deviceName + ' is ' + deviceStatus;
+  console.log(notificationMsg);
   webpush.sendNotification(pushSubscription, notificationMsg);
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
 }
 
 app.listen(app.get('port'), function() {
