@@ -21,7 +21,6 @@
 
 'use strict';
 
-console.log(window.vapidPublicKey);
 const applicationServerPublicKey = window.vapidPublicKey;
 
 const pushButton = document.querySelector('.js-push-btn');
