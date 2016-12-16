@@ -83,8 +83,7 @@ devicesList.on("value", function(data) {
 function sendNotification(deviceStatus, deviceName){
   deviceStatus == 1 ? deviceStatus = 'on' : 'off';
   var notificationMsg = deviceName + ' is ' + deviceStatus;
-  console.log(notificationMsg);
-  webpush.sendNotification(pushSubscription, notificationMsg);
+  return webpush.sendNotification(pushSubscription, notificationMsg);
 }
 
 function urlBase64ToUint8Array(base64String) {

@@ -22,7 +22,7 @@
 'use strict';
 
 console.log(window.vapidPublicKey);
-const applicationServerPublicKey = 'BCqdmcBmFOTzrpFiHvOVMRth0IbnGen2CBf74rDvahQyNUj-qFSDBexd3Q71fMvZR4VGsGdvIN0rrxwDIu4d17A';
+const applicationServerPublicKey = window.vapidPublicKey;
 
 const pushButton = document.querySelector('.js-push-btn');
 
